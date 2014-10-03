@@ -1,0 +1,102 @@
+#!/usr/bin/python -u
+#!/usr/bin/python2.2 -u
+
+import Tkinter
+import beep
+
+class TkMessage ( Tkinter.Tk ) :
+    def __init__ ( this, message ) :
+        Tkinter.Tk.__init__ ( this )
+        this.title("TkMessage")
+        this.__message = message
+
+        this.__build()
+        this.__bindings()
+        this.center()
+
+    def center ( this ) :
+        # width  = this.winfo_width()
+        # height = this.winfo_height()
+        
+        # we would like to get the real height and width of our
+        # window, but it hasn't been drawn yet. these numbers are from
+        # drawing the window and experimentally determining its size.
+
+        # The WM may not give accurate pixel sizes? Maybe these
+        # height/width are used differently by TkInter?
+        
+        width = 488
+        height = 165
+
+        # get information about our display
+        swidth = this.winfo_screenwidth()
+        sheight = this.winfo_screenheight()
+
+        # Calculations to place the window in the middle of the screen
+        xpos = int((swidth-width)/2)
+        ypos = int((sheight)/2) - height
+
+        # Calculations to place the window in the lower left
+        xpos = 0
+        ypos = sheight - height
+
+        # don't set height and width; let our widget sizes determine our total size.
+        # this.geometry("%dx%d+%d+%d" % (height,width,xpos,ypos))
+        this.geometry("+%d+%d" % (xpos,ypos))
+        
+    def __build ( this ) :
+        text = Tkinter.Text(this)
+        text.configure(width=40,height=4,background="lavender",foreground="darkslategray", font=("Times",20))
+        text.insert(Tkinter.INSERT,this.__message)
+        text.pack(fill="both",expand="yes")
+        
+        but = Tkinter.Button(this,text="OK", command=this.quit)
+        but.pack(fill="both",expand="yes")
+
+    def __bindings ( this ) :
+        this.bind("q",this.__shutdown)
+        this.bind("<space>",this.__shutdown)
+
+    def __shutdown ( this, event ) :
+        this.quit()
+
+if __name__ == '__main__' :
+    import time
+    import sys
+    import threading
+
+    # Extract the message from argv. We use the 'string' package for
+    # Py1.5 compatibility.
+    import string
+    message = string.join(sys.argv[1:],' ')
+    # replace any embedded newlines. is there a general way to do this
+    # for arbitrary embedded escape sequences?
+    message = string.replace(message,'\\n','\n')
+
+    beep = beep.Beep()
+
+    # Cause beeps to be generated in a separate thread, so we don't delay displaying the window.
+    do_beep = 1
+    if (do_beep) :
+        # TODO: configurable sound.
+        def play() :
+            try :
+                #beep.generic()
+                #beep.charge()
+                beep.salt_n_pepa()
+                #beep.shave_and_a_haircut()
+                #beep.impossible()
+                #beep.take_on_me()
+            finally :
+                beep.reset()
+
+        beeper = threading.Thread(target=play)
+        beeper.setDaemon(True) # if we quit, quit before the beeping stops.
+        beeper.start()
+    
+    # Spawn the message window.
+    mess = TkMessage(message)
+    mess.mainloop()
+
+    # just in case.
+    beep.reset()
